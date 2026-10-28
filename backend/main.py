@@ -1,8 +1,10 @@
 import sys
 from flask import Flask, request, jsonify
-from backend.SanitiseProgram import sanitise_program
+from flask_cors import CORS
+from SanitiseProgram import sanitise_program
 
 app = Flask(__name__)
+CORS(app)
 
 # Configuration Variables
 REMOVE_LLM_THINKING_PRINT_STATEMENTS = False
@@ -36,7 +38,29 @@ def sanitise():
 
     return jsonify({
         "input": sentence,
-        "result": result
+        "message": result
+    }), 200
+
+@app.route("/summarise_chat_history", methods=["POST"])
+def summarise_chat_history():
+    data = request.get_json(silent=True)
+    print(data)
+    
+    if not isinstance(data, dict):
+        return jsonify({"error": "Request body must be valid JSON."}), 400
+
+    sentences = data.get("sentences", [])
+
+    if not isinstance(sentences, list) or len(sentences) == 0:
+        return jsonify({"error": "'sentence' is required and cannot be empty."}), 400
+
+    try:
+        print("Calling Agent to see if chat history is to give warning")
+    except Exception as exc:
+        return jsonify({"error": "Sanitisation failed.", "details": str(exc)}), 500
+
+    return jsonify({
+        "message": "TO BE DETERMINED"
     }), 200
 
 

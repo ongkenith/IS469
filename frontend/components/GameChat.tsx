@@ -3,22 +3,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import "./GameChat.css";
 
-/* ------------------------------------------------------------------ */
-/* Types                                                               */
-/* ------------------------------------------------------------------ */
-
-export interface ChatMessage {
+interface ChatMessage {
   id: string;
   sender: string;
   text: string;
-  timestamp: string; // ISO string
-}
-
-export interface ChatSession {
-  id: string;
-  startedAt: string; // ISO string
-  endedAt: string; // ISO string
-  messages: ChatMessage[];
 }
 
 type ChatStatus = "idle" | "active" | "ended";
@@ -27,61 +15,24 @@ interface GameChatProps {
   /** Name shown next to the user's messages. */
   playerName?: string;
   /** Called once when the user ends the chat, with the full history. */
-  onEnd?: (session: ChatSession) => void;
+  onEnd: (messages: ChatMessage[]) => void;
   /** Max characters per message. */
   maxLength?: number;
 }
 
-/* ------------------------------------------------------------------ */
-/* Storage helpers: ended chats are kept in localStorage until sent   */
-/* ------------------------------------------------------------------ */
-
-const STORAGE_KEY = "game-chat:pending-sessions";
-
-export function getPendingSessions(): ChatSession[] {
+export async function sanitiseMessage(message: ChatMessage): Promise<boolean> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as ChatSession[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function savePendingSession(session: ChatSession): void {
-  try {
-    const all = getPendingSessions();
-    all.push(session);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-  } catch {
-    // Storage full or unavailable: the onEnd callback still receives the data.
-  }
-}
-
-/**
- * Call this whenever you are ready to upload (e.g. on a button click or
- * a timer). Sessions are removed from storage only after a successful send.
- */
-export async function sendPendingSessions(endpoint: string): Promise<boolean> {
-  const sessions = getPendingSessions();
-  if (sessions.length === 0) return true;
-
-  try {
-    const res = await fetch(endpoint, {
+    const res = await fetch("http://127.0.0.1:5000/sanitise", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessions }),
+      body: JSON.stringify({ "sentence": message }),
     });
     if (!res.ok) return false;
-    localStorage.removeItem(STORAGE_KEY);
     return true;
   } catch {
     return false;
   }
 }
-
-/* ------------------------------------------------------------------ */
-/* Utilities                                                           */
-/* ------------------------------------------------------------------ */
 
 function makeId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -97,14 +48,10 @@ function formatTime(iso: string): string {
   });
 }
 
-/* ------------------------------------------------------------------ */
-/* Component                                                           */
-/* ------------------------------------------------------------------ */
 
 export default function GameChat({
   playerName = "You",
-  onEnd,
-  maxLength = 200,
+  onEnd
 }: GameChatProps) {
   const [status, setStatus] = useState<ChatStatus>("idle");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -136,18 +83,7 @@ export default function GameChat({
 
   const endChat = () => {
     if (status !== "active" || !startedAt) return;
-
-    const ended = new Date().toISOString();
-    const session: ChatSession = {
-      id: makeId(),
-      startedAt,
-      endedAt: ended,
-      messages,
-    };
-
-    savePendingSession(session);
-    onEnd?.(session);
-    setEndedAt(ended);
+    onEnd(messages)
     setStatus("ended");
   };
 
@@ -171,91 +107,93 @@ export default function GameChat({
   const isActive = status === "active";
 
   return (
-    <section className="gc-root" aria-label="Game chat">
+    <>
+      <section className="gc-root" aria-label="Game chat">
 
-      <header className="gc-header">
-        <div className="gc-title">
-          <span
-            className={`gc-dot ${isActive ? "gc-dot-on" : ""}`}
-            aria-hidden="true"
-          />
-          <span>Chat</span>
-          <span className="gc-status">
-            {status === "idle" && "not started"}
-            {status === "active" && "live"}
-            {status === "ended" && "ended"}
-          </span>
+        <header className="gc-header">
+          <div className="gc-title">
+            <span
+              className={`gc-dot ${isActive ? "gc-dot-on" : ""}`}
+              aria-hidden="true"
+            />
+            <span>Chat</span>
+            <span className="gc-status">
+              {status === "idle" && "not started"}
+              {status === "active" && "live"}
+              {status === "ended" && "ended"}
+            </span>
+          </div>
+
+          {isActive ? (
+            <button type="button" className="gc-btn" onClick={endChat}>
+              End chat
+            </button>
+          ) : (
+            <button type="button" className="gc-btn" onClick={startChat}>
+              {status === "ended" ? "Start new chat" : "Start chat"}
+            </button>
+          )}
+        </header>
+
+        <div
+          className="gc-log"
+          ref={logRef}
+          role="log"
+          aria-live="polite"
+          aria-label="Chat messages"
+        >
+          {status === "idle" && (
+            <p className="gc-empty">Press “Start chat” to begin.</p>
+          )}
+
+          {startedAt && (
+            <p className="gc-system">Chat started at {formatTime(startedAt)}</p>
+          )}
+
+          {isActive && messages.length === 0 && (
+            <p className="gc-empty">No messages yet. Say something.</p>
+          )}
+
+          {messages.map((m) => (
+            <p className="gc-line" key={m.id}>
+              <span className="gc-sender">{m.sender}:</span>
+              <span className="gc-text">{m.text}</span>
+            </p>
+          ))}
+
+          {status === "ended" && endedAt && (
+            <p className="gc-system">
+              Chat ended at {formatTime(endedAt)} · {messages.length}{" "}
+              {messages.length === 1 ? "message" : "messages"} saved
+            </p>
+          )}
         </div>
 
-        {isActive ? (
-          <button type="button" className="gc-btn" onClick={endChat}>
-            End chat
+        <form className="gc-form" onSubmit={sendMessage}>
+          <input
+            ref={inputRef}
+            className="gc-input"
+            type="text"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder={isActive ? "Type a message" : "Start the chat to type"}
+            disabled={!isActive}
+            autoComplete="off"
+            aria-label="Message"
+          />
+          <button
+            type="submit"
+            className="gc-btn gc-btn-send"
+            disabled={!isActive || draft.trim().length === 0}
+          >
+            Send
           </button>
-        ) : (
-          <button type="button" className="gc-btn" onClick={startChat}>
-            {status === "ended" ? "Start new chat" : "Start chat"}
-          </button>
-        )}
-      </header>
+        </form>
+      </section>
 
-      <div
-        className="gc-log"
-        ref={logRef}
-        role="log"
-        aria-live="polite"
-        aria-label="Chat messages"
-      >
-        {status === "idle" && (
-          <p className="gc-empty">Press “Start chat” to begin.</p>
-        )}
-
-        {startedAt && (
-          <p className="gc-system">Chat started at {formatTime(startedAt)}</p>
-        )}
-
-        {isActive && messages.length === 0 && (
-          <p className="gc-empty">No messages yet. Say something.</p>
-        )}
-
-        {messages.map((m) => (
-          <p className="gc-line" key={m.id}>
-            <time className="gc-time" dateTime={m.timestamp}>
-              {formatTime(m.timestamp)}
-            </time>
-            <span className="gc-sender">{m.sender}:</span>
-            <span className="gc-text">{m.text}</span>
-          </p>
-        ))}
-
-        {status === "ended" && endedAt && (
-          <p className="gc-system">
-            Chat ended at {formatTime(endedAt)} · {messages.length}{" "}
-            {messages.length === 1 ? "message" : "messages"} saved
-          </p>
-        )}
-      </div>
-
-      <form className="gc-form" onSubmit={sendMessage}>
-        <input
-          ref={inputRef}
-          className="gc-input"
-          type="text"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          maxLength={maxLength}
-          placeholder={isActive ? "Type a message" : "Start the chat to type"}
-          disabled={!isActive}
-          autoComplete="off"
-          aria-label="Message"
-        />
-        <button
-          type="submit"
-          className="gc-btn gc-btn-send"
-          disabled={!isActive || draft.trim().length === 0}
-        >
-          Send
-        </button>
-      </form>
-    </section>
+      {status === "ended" && (
+        <div>If there is issues, LLM output is here</div>
+      )}
+    </>
   );
 }
