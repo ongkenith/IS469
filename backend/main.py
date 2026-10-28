@@ -1,5 +1,5 @@
 import sys
-from SanitiseProgram import sanitise_program
+from backend.SanitiseProgram import sanitise_program
 
 # Configuration Variables
 REMOVE_LLM_THINKING_PRINT_STATEMENTS = False
