@@ -1,39 +1,44 @@
 import sys
+from flask import Flask, request, jsonify
 from backend.SanitiseProgram import sanitise_program
+
+app = Flask(__name__)
 
 # Configuration Variables
 REMOVE_LLM_THINKING_PRINT_STATEMENTS = False
 
-def main():
-    """ Main function executed when Python CLI executed"""
-    global REMOVE_LLM_THINKING_PRINT_STATEMENTS
+@app.route("/sanitise", methods=["POST"])
+def sanitise():
+    """
+    Sanitise a sentence.
 
-    args = sys.argv[1:]
-    if "--remove-LLM-thinking" in args:  # If user decides to not see intermediate steps
-        REMOVE_LLM_THINKING_PRINT_STATEMENTS = True
+    Expected JSON body:
+    {
+        "sentence": "Your sentence here",
+    }
+    """
+    data = request.get_json(silent=True)
 
-    print("=== Program Starting Up... ===\n")  # Starting Up
+    if not isinstance(data, dict):
+        return jsonify({"error": "Request body must be valid JSON."}), 400
+
+    sentence = data.get("sentence", "")
+
+    if not isinstance(sentence, str) or sentence.strip() == "":
+        return jsonify({"error": "'sentence' is required and cannot be empty."}), 400
 
     try:
-        while True:
-            input_sentence = input("Type your sentence here: ")
+        result = sanitise_program(
+            sentence
+        )
+    except Exception as exc:
+        return jsonify({"error": "Sanitisation failed.", "details": str(exc)}), 500
 
-            # Check if input is empty
-            while input_sentence.strip() == "":
-                input_sentence = input("Type your sentence here (empty string not accepted): ")
+    return jsonify({
+        "input": sentence,
+        "result": result
+    }), 200
 
-            # Call program Function
-            sanitise_program(input_sentence, llm_intermediate_statement=REMOVE_LLM_THINKING_PRINT_STATEMENTS)
-
-            # Check if User wants to end it
-            input_continue_program = input("Do you have other sentences? (Y/N): ")
-            if input_continue_program.strip() == "N" or input_continue_program.strip() == "n":
-                break
-
-        print("\n=== End of Program ===")
-        
-    except KeyboardInterrupt:
-        print("\n=== End of Program ===")
 
 if __name__ == "__main__":
-    main()
+    app.run(host="0.0.0.0", port=5000, debug=True)

@@ -1,6 +1,6 @@
 import backend.classes.LayaClass
 
-def sanitise_program(input_sentence, llm_intermediate_statement=True):
+def sanitise_program(input_sentence):
     """ Class for the program """
 
     
