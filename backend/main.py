@@ -9,22 +9,16 @@ CORS(app)
 # Configuration Variables
 REMOVE_LLM_THINKING_PRINT_STATEMENTS = False
 
+
 @app.route("/sanitise", methods=["POST"])
 def sanitise():
-    """
-    Sanitise a sentence.
-
-    Expected JSON body:
-    {
-        "sentence": "Your sentence here",
-    }
-    """
+    """ Check if a sentence is offensive. If yes, sanitise it """
     data = request.get_json(silent=True)
 
     if not isinstance(data, dict):
         return jsonify({"error": "Request body must be valid JSON."}), 400
 
-    sentence = data.get("sentence", "")
+    sentence = data.get("sentence", "")["text"]
 
     if not isinstance(sentence, str) or sentence.strip() == "":
         return jsonify({"error": "'sentence' is required and cannot be empty."}), 400
@@ -33,18 +27,31 @@ def sanitise():
         result = sanitise_program(
             sentence
         )
-    except Exception as exc:
-        return jsonify({"error": "Sanitisation failed.", "details": str(exc)}), 500
 
-    return jsonify({
-        "input": sentence,
-        "message": result
-    }), 200
+        if result[1] == 0:  # IF found not offensive
+            return jsonify({
+                "input": sentence,
+                "message": result[0]
+            }), 200
+        elif result[1] == 1:  # If found offensive
+            return jsonify({
+                "input": sentence,
+                "message": "[To be rewritten]"
+            }), 200
+        elif result[1] == -1:
+            return jsonify({
+                "input": sentence,
+                "message": result[0]
+            }), 200
+        
+    except Exception as exc:
+        print(f"[Error] {exc}")
+        return jsonify({"error": "Sanitisation failed.", "details": str(exc)}), 500
 
 @app.route("/summarise_chat_history", methods=["POST"])
 def summarise_chat_history():
+    """ Check if a chat history is offensive. If yes, provide customised warning message """
     data = request.get_json(silent=True)
-    print(data)
     
     if not isinstance(data, dict):
         return jsonify({"error": "Request body must be valid JSON."}), 400
@@ -55,7 +62,7 @@ def summarise_chat_history():
         return jsonify({"error": "'sentence' is required and cannot be empty."}), 400
 
     try:
-        print("Calling Agent to see if chat history is to give warning")
+        print("[Action] Calling Agent to see if chat history is to give warning")
     except Exception as exc:
         return jsonify({"error": "Sanitisation failed.", "details": str(exc)}), 500
 

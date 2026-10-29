@@ -20,17 +20,20 @@ interface GameChatProps {
   maxLength?: number;
 }
 
-export async function sanitiseMessage(message: ChatMessage): Promise<boolean> {
+export async function sanitiseMessage(message: ChatMessage): Promise<ChatMessage> {
   try {
     const res = await fetch("http://127.0.0.1:5000/sanitise", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ "sentence": message }),
     });
-    if (!res.ok) return false;
-    return true;
+    if (!res.ok) return message;
+
+    const data = await res.json()
+    console.log("Data Received: ", data)
+    return {"id": message.id, "sender": message.sender, "text": data.message}
   } catch {
-    return false;
+    return message;
   }
 }
 
@@ -87,21 +90,19 @@ export default function GameChat({
     setStatus("ended");
   };
 
-  const sendMessage = (e: FormEvent) => {
+  const sendMessage = async (e: FormEvent) => {
     e.preventDefault();
     const text = draft.trim();
     if (!text || status !== "active") return;
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: makeId(),
-        sender: playerName,
-        text,
-        timestamp: new Date().toISOString(),
-      },
-    ]);
     setDraft("");
+    const sanitised = await sanitiseMessage({
+      id: makeId(),
+      sender: playerName,
+      text: text,
+    });
+
+    setMessages((prev) => [...prev, sanitised]);
   };
 
   const isActive = status === "active";
