@@ -2,12 +2,10 @@ import sys
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from SanitiseProgram import sanitise_program
+from classes.LayaClient import LayaClient
 
 app = Flask(__name__)
 CORS(app)
-
-# Configuration Variables
-REMOVE_LLM_THINKING_PRINT_STATEMENTS = False
 
 
 @app.route("/sanitise", methods=["POST"])
@@ -25,7 +23,8 @@ def sanitise():
 
     try:
         result = sanitise_program(
-            sentence
+            sentence,
+            loaded_model = _LAYAMODEL
         )
 
         if result[1] == 0:  # IF found not offensive
@@ -72,4 +71,7 @@ def summarise_chat_history():
 
 
 if __name__ == "__main__":
+    # Load any LLM model that will be used before Flask App begins
+    _LAYAMODEL = LayaClient()
+
     app.run(host="0.0.0.0", port=5000, debug=True)
