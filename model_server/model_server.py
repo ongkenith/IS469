@@ -6,13 +6,17 @@ _MODEL = LayaLLM()  # Loaded once, only when you start this server
 
 
 @app.route("/laya_predict", methods=["POST"])
-def predict():
+def laya_predict():
     data = request.get_json(silent=True)
 
     if not isinstance(data, dict) or not isinstance(data.get("sentence"), str):
         return jsonify({"error": "'sentence' must be a string."}), 400
 
     return jsonify(_MODEL.is_message_offensive(data["sentence"])), 200
+
+@app.route("/agent_output", methods=["POST"])
+def agent_output():
+    pass
 
 
 if __name__ == "__main__":
