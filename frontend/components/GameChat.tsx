@@ -139,7 +139,7 @@ export default function GameChat({
 
     // Call Agent to get sanitised version
     if (message.pending === true) {
-      const sanitised = await sanitiseMessage({"id": message.id, "sender": message.sender, "text": message.text, "pending": true});
+      const sanitised = await sanitiseMessage({"id": message.id, "sender": message.sender, "text": text, "pending": true});
 
       setMessages((prev) =>
         prev.map((m) =>

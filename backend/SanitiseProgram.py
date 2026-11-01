@@ -7,7 +7,7 @@ def sanitise_program(input_sentence):
     result = laya_client.sanitise_message(input_sentence)  # Get the prediction
 
     if "Error:" not in result["result"]:
-        return (input_sentence, 0)
+        return (result["result"], 0)
     else:
         print(f"[Agent Error Exception] {result['result']}")
         return (input_sentence, -1)
