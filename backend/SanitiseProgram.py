@@ -1,21 +1,13 @@
-def sanitise_program(input_sentence, loaded_model):
+from classes.SanitiseAgentClient import SanitiseAgentClient
+
+def sanitise_program(input_sentence):
     """ Start program and outputs santised sentiment of sentence """
-    THRESHOLD_FOR_NON_OFFENSIVE = 0.80  # Set confidence percentage where result is non-offensive requires further checks
-
-    # Get the prediction
-    result = loaded_model.is_message_offensive(input_sentence)
-
-    if result["confidence"] > THRESHOLD_FOR_NON_OFFENSIVE and result["result"] == "0":  # If not offensive with high confidence
-        print(f"[Laya LLM] Not offensive with {result['confidence']} confidence")
-        return (input_sentence, 0)
-    elif (result["confidence"] <= THRESHOLD_FOR_NON_OFFENSIVE and result["result"] == "0"):  # If offensive or not offensive but low confidence
-        print(f"[Laya LLM] Not offensive with {result['confidence']} confidence")
-        return (input_sentence, 1)
-    elif result["result"] == "1":  # If offensive or not offensive but low confidence
-            print(f"[Laya LLM] Offensive phrasing")
-            return (input_sentence, 1)
-    else:
-        print(f"[Laya LLM Error Exception] {result['result']}")
-        return (input_sentence, -1)
-
     
+    laya_client = SanitiseAgentClient()  # Call Client
+    result = laya_client.sanitise_message(input_sentence)  # Get the prediction
+
+    if "Error:" not in result["result"]:
+        return (input_sentence, 0)
+    else:
+        print(f"[Agent Error Exception] {result['result']}")
+        return (input_sentence, -1)

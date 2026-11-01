@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
-from classes.LayaClass import LayaLLM
+from llm_modules.LayaLLM import LayaLLM
+from llm_modules.RephraseAgent import RephraseAgent
 
 app = Flask(__name__)
 _MODEL = LayaLLM()  # Loaded once, only when you start this server
+_REPHRASEAGENT = RephraseAgent()
 
 
 @app.route("/laya_predict", methods=["POST"])
@@ -14,9 +16,14 @@ def laya_predict():
 
     return jsonify(_MODEL.is_message_offensive(data["sentence"])), 200
 
-@app.route("/agent_output", methods=["POST"])
-def agent_output():
-    pass
+@app.route("/agent_sanitise", methods=["POST"])
+def agent_sanitise():
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict) or not isinstance(data.get("sentence"), str):
+        return jsonify({"error": "'sentence' must be a string."}), 400
+
+    return jsonify(_REPHRASEAGENT.start_program(data.get("sentence"))), 200
 
 
 if __name__ == "__main__":

@@ -27,6 +27,7 @@ class LayaLLM:
             }
 
         try: 
+            print("Program is_message_offensive has started")
             res = self.agent.predict({"message": sentence}, self.questions)
             ans = res["answers"]["label"]
 

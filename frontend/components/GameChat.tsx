@@ -7,6 +7,7 @@ interface ChatMessage {
   id: string;
   sender: string;
   text: string;
+  pending: boolean; // true while waiting for the rephrased version
 }
 
 type ChatStatus = "idle" | "active" | "ended";
@@ -20,9 +21,10 @@ interface GameChatProps {
   maxLength?: number;
 }
 
-export async function sanitiseMessage(message: ChatMessage): Promise<ChatMessage> {
+export async function predictMessage(message: ChatMessage): Promise<ChatMessage> {
+  /* Call API to determine if message is offensive or not */
   try {
-    const res = await fetch("http://127.0.0.1:5000/sanitise", {
+    const res = await fetch("http://127.0.0.1:5000/predict", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ "sentence": message }),
@@ -30,10 +32,34 @@ export async function sanitiseMessage(message: ChatMessage): Promise<ChatMessage
     if (!res.ok) return message;
 
     const data = await res.json()
-    console.log("Data Received: ", data)
-    return {"id": message.id, "sender": message.sender, "text": data.message}
+    console.log("Data Received [predict]: ", data)
+
+    if (data.message === "[To be rewritten]") {
+      return {"id": message.id, "sender": message.sender, "text": "[Your message is being rewritten...]", "pending": true}
+    } else {
+      return {"id": message.id, "sender": message.sender, "text": message.text, "pending": false}
+    }
   } catch {
     return message;
+  }
+}
+
+export async function sanitiseMessage(message: ChatMessage): Promise<ChatMessage> {
+  /* Call API sanitise offensive message */
+  try {
+    const res = await fetch("http://127.0.0.1:5000/sanitise", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ "sentence": message }),
+    });
+    if (!res.ok) return {"id": message.id, "sender": message.sender, "text": "*Message is offensive*", "pending": false};
+
+    const data = await res.json()
+    console.log("Data Received [sanitise]: ", data)
+    
+    return {"id": message.id, "sender": message.sender, "text": data.message, "pending": false}
+  } catch {
+    return {"id": message.id, "sender": message.sender, "text": "*Message is offensive*", "pending": false};
   }
 }
 
@@ -61,6 +87,7 @@ export default function GameChat({
   const [draft, setDraft] = useState("");
   const [startedAt, setStartedAt] = useState<string | null>(null);
   const [endedAt, setEndedAt] = useState<string | null>(null);
+  const [disableSubmit, setDisableSubmit] = useState<boolean>(false)
 
   const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -92,17 +119,37 @@ export default function GameChat({
 
   const sendMessage = async (e: FormEvent) => {
     e.preventDefault();
+    setDisableSubmit(true)
     const text = draft.trim();
-    if (!text || status !== "active") return;
+    if (!text || status !== "active") {
+      setDisableSubmit(false)
+      return;
+    }
 
     setDraft("");
-    const sanitised = await sanitiseMessage({
+
+    const message = await predictMessage({
       id: makeId(),
       sender: playerName,
       text: text,
+      pending: false,
     });
 
-    setMessages((prev) => [...prev, sanitised]);
+    setMessages((prev) => [...prev, message]);
+
+    // Call Agent to get sanitised version
+    if (message.pending === true) {
+      const sanitised = await sanitiseMessage({"id": message.id, "sender": message.sender, "text": message.text, "pending": true});
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === message.id ? { ...sanitised } : m
+        )
+      );
+    }
+
+    setDisableSubmit(false)
+    return
   };
 
   const isActive = status === "active";
@@ -185,7 +232,7 @@ export default function GameChat({
           <button
             type="submit"
             className="gc-btn gc-btn-send"
-            disabled={!isActive || draft.trim().length === 0}
+            disabled={!isActive || draft.trim().length === 0 || disableSubmit}
           >
             Send
           </button>

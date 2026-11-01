@@ -1,15 +1,14 @@
-import sys
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from PredictProgram import predict_program
 from SanitiseProgram import sanitise_program
-from classes.LayaClient import LayaClient
 
 app = Flask(__name__)
 CORS(app)
 
 
-@app.route("/sanitise", methods=["POST"])
-def sanitise():
+@app.route("/predict", methods=["POST"])
+def predict():
     """ Check if a sentence is offensive. If yes, sanitise it """
     data = request.get_json(silent=True)
 
@@ -22,10 +21,7 @@ def sanitise():
         return jsonify({"error": "'sentence' is required and cannot be empty."}), 400
 
     try:
-        result = sanitise_program(
-            sentence,
-            loaded_model = _LAYAMODEL
-        )
+        result = predict_program(sentence)
 
         if result[1] == 0:  # IF found not offensive
             return jsonify({
@@ -45,7 +41,43 @@ def sanitise():
         
     except Exception as exc:
         print(f"[Error] {exc}")
+        return jsonify({"error": "Prediction failed.", "details": str(exc)}), 500
+
+
+@app.route("/sanitise", methods=["POST"])
+def sanitise():
+    """ Check if a sentence is offensive. If yes, sanitise it """
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict):
+        return jsonify({"error": "Request body must be valid JSON."}), 400
+
+    sentence = data.get("sentence", "")["text"]
+
+    if not isinstance(sentence, str) or sentence.strip() == "":
+        return jsonify({"error": "'sentence' is required and cannot be empty."}), 400
+
+    try:
+        pass
+        result = sanitise_program(
+            sentence
+        )
+
+        if result[1] == 0:  # IF no error
+            return jsonify({
+                "input": sentence,
+                "message": f"*{result[0]}*"
+            }), 200
+        elif result[1] == -1:
+            return jsonify({
+                "input": sentence,
+                "message": "*Message is offensive*"
+            }), 200
+        
+    except Exception as exc:
+        print(f"[Error] {exc}")
         return jsonify({"error": "Sanitisation failed.", "details": str(exc)}), 500
+
 
 @app.route("/summarise_chat_history", methods=["POST"])
 def summarise_chat_history():
@@ -71,7 +103,4 @@ def summarise_chat_history():
 
 
 if __name__ == "__main__":
-    # Load any LLM model that will be used before Flask App begins
-    _LAYAMODEL = LayaClient()
-
     app.run(host="0.0.0.0", port=5000, debug=True)
