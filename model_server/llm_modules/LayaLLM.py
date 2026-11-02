@@ -2,8 +2,8 @@ import laya
 
 class LayaLLM:
     def __init__(self):     
-        self.model = "convaiinnovations/laya"
-        self.agent = laya.load(self.model)
+        self.model_dir = "./laya_finetuned"
+        self.agent = laya.load(self.model_dir)
         
         # Set up the structure and prompt for Laya LLM
         self.questions = {
@@ -31,12 +31,14 @@ class LayaLLM:
             res = self.agent.predict({"message": sentence}, self.questions)
             ans = res["answers"]["label"]
 
+            print("Program is_message_offensive has ended")
             return {
                 "result": str(ans["choice"]),
                 "confidence": float(ans.get("answer_confidence"))
             }
 
         except Exception as e:
+            print("Program is_message_offensive has started")
             return {
                 "result": f"Error: {e}",
                 "confidence": 0

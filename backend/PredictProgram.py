@@ -11,7 +11,7 @@ def predict_program(input_sentence):
         print(f"[Laya LLM] Not offensive with {result['confidence']} confidence")
         return (input_sentence, 0)
     elif (result["confidence"] <= THRESHOLD_FOR_NON_OFFENSIVE and result["result"] == "0"):  # If offensive or not offensive but low confidence
-        print(f"[Laya LLM] Not offensive with {result['confidence']} confidence")
+        print(f"[Laya LLM] Not offensive with low ({result['confidence']}) confidence")
         return (input_sentence, 1)
     elif result["result"] == "1":  # If offensive or not offensive but low confidence
             print(f"[Laya LLM] Offensive phrasing")

@@ -11,7 +11,6 @@ load_dotenv()
 class RephraseAgent:
     def __init__(self):
         self.main_model_name = "openai/gpt-oss-20b"
-        # self.main_model_name = "granite4.2:3b"
         self.effort_to_step_budget = {
             "Low": 1,
             "Medium": 3,
@@ -58,17 +57,7 @@ class RephraseAgent:
             # Call orchestrator to determine the next step
             full_content = self.get_content_from_working_memory(WORKING_MEMORY)  # refresh every loop
 
-            # response = chat(
-            #     model=self.main_model_name,
-            #     format="json",  # forces valid JSON output
-            #     messages=[
-            #         {'role': 'system', 'content': system_prompt},
-            #         {'role': 'user', 'content': full_content},
-            #     ],
-            #     keep_alive="30m",
-            # )
-            # raw = response["message"]["content"]
-
+            # Using GROQ
             response = self.client.chat.completions.create(
                 model=self.main_model_name,
                 response_format={"type": "json_object"},
@@ -92,15 +81,14 @@ class RephraseAgent:
 
                 # See what action orchestrator LLM want to do
                 if kind == "Completed":
-                    if re.sub(r"\[\w+\]\:", "", WORKING_MEMORY[-1]).strip() == "":
-                        self.logs.append(f"> Step Budget: {step_budget}, Retries: {error_retires} -- '{WORKING_MEMORY[-1].strip()}'")
+                    if re.sub(r"\[[^\]]+\]\:", "", action.get("answer")).strip() == "":
                         self.logs.append(f"> Return -- 'LLM did not return anything'")
 
                         print("Program start_program has ended")
                         print("\n".join(self.logs))
                         
                         return {"result": "Error: LLM did not return anything"}
-                    temp = re.sub(r"\[\w+\]\:", "", WORKING_MEMORY[-1])
+                    temp = re.sub(r"\[[^\]]+\]\:", "", action.get("answer").strip())
                     self.logs.append(f"> Step Budget: {step_budget}, Retries: {error_retires} -- '{WORKING_MEMORY[-1].strip()}'")
                     self.logs.append(f"> Return -- '{temp}'")
 
@@ -131,7 +119,7 @@ class RephraseAgent:
         print("\n".join(self.logs))
         return {"result": "Error: Ran out of step budget to answer the question"}
 
-    def call_rephraser_LLM(self, content, model="qwen3.5:0.8b"):
+    def call_rephraser_LLM(self, content, model="gemma3:4b"):
         system_prompt = self.get_system_prompt_from_md_file("./system_prompts/RephraseLLM.md")
 
         response = chat(
