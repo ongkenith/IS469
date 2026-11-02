@@ -3,7 +3,11 @@ import laya
 class LayaLLM:
     def __init__(self):     
         self.model_dir = "./laya_finetuned"
-        self.agent = laya.load(self.model_dir)
+        try:
+            self.agent = laya.load(self.model_dir)
+        except:
+            print("[LayaLLM Class Error]: Finetuned model cannot be loaded in. Reverting to basic model...")
+            self.agent = laya.load("convaiinnovations/laya")
         
         # Set up the structure and prompt for Laya LLM
         self.questions = {

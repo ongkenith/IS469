@@ -27,10 +27,18 @@ npm install
 ```
 3. **Pull the following Ollama models**
 ```bash
-ollama pull <model-name>
+ollama pull gemma3:4b
 ```
 4. **Set up environment variables**<br>
 Make a copy of .env.example file under 'model_server' folder and add your GROQ API key
+
+5. **OPTIONAL: Add finetuned Laya model**<br>
+Rename the folder to "laya_finetuned" and add it in the "model_server" directory. Inside the folder, it should contain
+    - Encoder folder with 'config.json'
+    - Tokeniser folder with 'tokenizer_config.json' and 'tokenizer.json' files
+    - 'model.safetensors' file
+    - 'rl_agent_config.json' file
+Otherwise, the default Laya model will be used
 
 ### Running the Application
 
@@ -49,7 +57,9 @@ python main.py
 cd frontend
 npm run dev
 ```
-The app will be available at `http://localhost:3000`
+The app will be available at `http://localhost:3000`.
+
+Refer to command line to see the printed logs of the application.
 
 ## Limitations of Applications
 
@@ -59,6 +69,6 @@ The app will be available at `http://localhost:3000`
 |----------|----------|---------|
 | Laya AI | convaiinnovations/laya | Determine if the message is offensive |
 | Groq | openai/gpt-oss-20b | LLM used to determine next course of action in an Agentic AI system |
-| Ollama (local) | --To be confirmed-- | LLM that rephrases to non-offensive message |
+| Ollama (local) | gemma3:4b | LLM that rephrases to non-offensive message |
 
 ## Architecture
