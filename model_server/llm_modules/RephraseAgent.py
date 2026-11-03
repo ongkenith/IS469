@@ -39,13 +39,13 @@ class RephraseAgent:
 
         return system_prompt
 
-    def start_program(self, content, thinking_level = "Medium"):
+    def start_program(self, content):
         print("Program start_program has started")
         system_prompt = self.get_system_prompt_from_md_file("./system_prompts/RephraseOrchestrator.md")  # Get system prompt instructions
         try:  # Get thinking effort for agent
             thinking_level = os.getenv("THINKING_EFFORT")
         except:
-            pass
+            thinking_level = "Medium"
 
         MAX_STEP_BUDGET = self.effort_to_step_budget[thinking_level]  # Maximum loops the harness will take to call the LLM
         MAX_ERROR_RETRIES = 2  # Maximum times the LLM can retry

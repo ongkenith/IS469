@@ -25,13 +25,14 @@ python -m pip install -r requirements.txt
 cd frontend
 npm install
 ```
-3. **Pull the following Ollama models**
+3. **Pull the following Ollama model(s)**
 ```bash
 ollama pull gemma3:4b
 ```
 4. **Set up environment variables**<br>
     1. Make a copy of .env.example file under 'model_server' folder
-    2. Add your GROQ API key, and other environemnt variable (else they will remain default)
+    2. Add your GROQ API key
+    3. Adjust THINKING_EFFORT you want the Agent to have (Low, Medium or High)
 
 5. **OPTIONAL: Add finetuned Laya model**<br>
 Rename the folder to "laya_finetuned" and add it in the "model_server" directory. Inside the folder, it should contain
