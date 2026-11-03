@@ -12,9 +12,9 @@ class RephraseAgent:
     def __init__(self):
         self.main_model_name = "openai/gpt-oss-20b"
         self.effort_to_step_budget = {
-            "Low": 1,
-            "Medium": 3,
-            "High": 5
+            "Low": 2,
+            "Medium": 4,
+            "High": 6
         }
         self.client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         self.logs = []
@@ -42,6 +42,10 @@ class RephraseAgent:
     def start_program(self, content, thinking_level = "Medium"):
         print("Program start_program has started")
         system_prompt = self.get_system_prompt_from_md_file("./system_prompts/RephraseOrchestrator.md")  # Get system prompt instructions
+        try:  # Get thinking effort for agent
+            thinking_level = os.getenv("THINKING_EFFORT")
+        except:
+            pass
 
         MAX_STEP_BUDGET = self.effort_to_step_budget[thinking_level]  # Maximum loops the harness will take to call the LLM
         MAX_ERROR_RETRIES = 2  # Maximum times the LLM can retry
@@ -81,15 +85,14 @@ class RephraseAgent:
 
                 # See what action orchestrator LLM want to do
                 if kind == "Completed":
-                    if re.sub(r"\[[^\]]+\]\:", "", action.get("answer")).strip() == "":
+                    if re.sub(r"\[[^\]]+\]\:", "", WORKING_MEMORY[-1].strip()).strip() == "":
                         self.logs.append(f"> Return -- 'LLM did not return anything'")
 
                         print("Program start_program has ended")
                         print("\n".join(self.logs))
                         
                         return {"result": "Error: LLM did not return anything"}
-                    temp = re.sub(r"\[[^\]]+\]\:", "", action.get("answer").strip())
-                    self.logs.append(f"> Step Budget: {step_budget}, Retries: {error_retires} -- '{WORKING_MEMORY[-1].strip()}'")
+                    temp = re.sub(r"\[[^\]]+\]\:", "", WORKING_MEMORY[-1].strip())
                     self.logs.append(f"> Return -- '{temp}'")
 
                     print("Program start_program has ended")

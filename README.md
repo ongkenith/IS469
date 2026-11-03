@@ -30,7 +30,8 @@ npm install
 ollama pull gemma3:4b
 ```
 4. **Set up environment variables**<br>
-Make a copy of .env.example file under 'model_server' folder and add your GROQ API key
+    1. Make a copy of .env.example file under 'model_server' folder
+    2. Add your GROQ API key, and other environemnt variable (else they will remain default)
 
 5. **OPTIONAL: Add finetuned Laya model**<br>
 Rename the folder to "laya_finetuned" and add it in the "model_server" directory. Inside the folder, it should contain
