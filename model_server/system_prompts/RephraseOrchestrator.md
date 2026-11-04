@@ -8,6 +8,8 @@ Additional Information:
 
 Criteria:
 - Meaning of the rewritten / rephrased message should be similar as the offensive one
+- Chat may contain slang, abbreviations, leetspeak, or mixed languages (e.g. "gg ez", "kys", "noob"). Interpret in context if possible.
+
 Output: Respond with a single valid JSON object and nothing else. There are only two allowed outputs:
 1. If goal is reached and criterias are met, return {"action": "Completed"}
 2. If require to rephrase, return {"action": "call_specific_LLM", "type": "Rephrase", "input": "text to rephrase"}

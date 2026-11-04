@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from PredictProgram import predict_program
 from SanitiseProgram import sanitise_program
+from VerdictProgram import get_verdict
 
 app = Flask(__name__)
 CORS(app)
@@ -79,9 +80,9 @@ def sanitise():
         return jsonify({"error": "Sanitisation failed.", "details": str(exc)}), 500
 
 
-@app.route("/summarise_chat_history", methods=["POST"])
-def summarise_chat_history():
-    """ Check if a chat history is offensive. If yes, provide customised warning message """
+@app.route("/gives_verdict", methods=["POST"])
+def gives_verdict():
+    """ Given that the chat contains offensive messages, provide verdict """
     data = request.get_json(silent=True)
     
     if not isinstance(data, dict):
@@ -93,13 +94,21 @@ def summarise_chat_history():
         return jsonify({"error": "'sentence' is required and cannot be empty."}), 400
 
     try:
-        print("[Action] Calling Agent to see if chat history is to give warning")
-    except Exception as exc:
-        return jsonify({"error": "Sanitisation failed.", "details": str(exc)}), 500
+        print("[Action] Calling LLM to determine violations hit")
+        chat_history = " ".join(sentences)
+        final_verdict = get_verdict(chat_history)
 
-    return jsonify({
-        "message": "TO BE DETERMINED"
-    }), 200
+        if final_verdict[1] == 0:
+            return jsonify({
+                "message": final_verdict[0]
+            }), 200
+        else:
+            return jsonify({
+                "message": ""
+            }), 200
+
+    except Exception as exc:
+        return jsonify({"error": "Verdict failed.", "details": str(exc)}), 500
 
 
 if __name__ == "__main__":

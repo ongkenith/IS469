@@ -1,10 +1,12 @@
 from flask import Flask, request, jsonify
 from llm_modules.LayaLLM import LayaLLM
 from llm_modules.RephraseAgent import RephraseAgent
+from llm_modules.VerdictLLM import VerdictLLM
 
 app = Flask(__name__)
 _MODEL = LayaLLM()  # Loaded once, only when you start this server
 _REPHRASEAGENT = RephraseAgent()
+_VERDICT = VerdictLLM()
 
 
 @app.route("/laya_predict", methods=["POST"])
@@ -24,6 +26,15 @@ def agent_sanitise():
         return jsonify({"error": "'sentence' must be a string."}), 400
 
     return jsonify(_REPHRASEAGENT.start_program(data.get("sentence"))), 200
+
+@app.route("/llm_verdict", methods=["POST"])
+def llm_verdict():
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict) or not isinstance(data.get("chat_history"), str):
+        return jsonify({"error": "'chat_history' must be a string."}), 400
+
+    return jsonify(_VERDICT.get_verdict(data["chat_history"])), 200
 
 
 if __name__ == "__main__":

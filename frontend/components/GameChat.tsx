@@ -16,9 +16,7 @@ interface GameChatProps {
   /** Name shown next to the user's messages. */
   playerName?: string;
   /** Called once when the user ends the chat, with the full history. */
-  onEnd: (messages: ChatMessage[]) => void;
-  /** Max characters per message. */
-  maxLength?: number;
+  onEnd: (messages: ChatMessage[]) => Promise<string>;
 }
 
 export async function predictMessage(message: ChatMessage): Promise<ChatMessage> {
@@ -82,12 +80,15 @@ export default function GameChat({
   playerName = "You",
   onEnd
 }: GameChatProps) {
+  const [chatIsOffensive, setChatIsOffensive] = useState<boolean>(false)
   const [status, setStatus] = useState<ChatStatus>("idle");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [startedAt, setStartedAt] = useState<string | null>(null);
   const [endedAt, setEndedAt] = useState<string | null>(null);
   const [disableSubmit, setDisableSubmit] = useState<boolean>(false)
+  const [disableEndChatButton, setDisableEndChatButton] = useState<boolean>(false)
+  const [llmVerdict, setllmVerdictMsg] = useState<string>("")
 
   const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -111,9 +112,16 @@ export default function GameChat({
     setStatus("active");
   };
 
-  const endChat = () => {
+  const endChat = async () => {
     if (status !== "active" || !startedAt) return;
-    onEnd(messages)
+    if (chatIsOffensive) {
+      setDisableEndChatButton(true)
+      const verdict = await onEnd(messages)
+      if (verdict !== "") {
+        setllmVerdictMsg(verdict)
+      }
+    }
+    setDisableEndChatButton(false)
     setStatus("ended");
   };
 
@@ -134,6 +142,10 @@ export default function GameChat({
       text: text,
       pending: false,
     });
+
+    if (text !== message.text) {
+      setChatIsOffensive(true)
+    }
 
     setMessages((prev) => [...prev, message]);
 
@@ -173,7 +185,7 @@ export default function GameChat({
           </div>
 
           {isActive ? (
-            <button type="button" className="gc-btn" onClick={endChat}>
+            <button type="button" className="gc-btn" onClick={endChat} disabled={disableEndChatButton}>
               End chat
             </button>
           ) : (
@@ -232,15 +244,15 @@ export default function GameChat({
           <button
             type="submit"
             className="gc-btn gc-btn-send"
-            disabled={!isActive || draft.trim().length === 0 || disableSubmit}
+            disabled={!isActive || draft.trim().length === 0 || disableSubmit || disableEndChatButton}
           >
             Send
           </button>
         </form>
       </section>
 
-      {status === "ended" && (
-        <div>If there is issues, LLM output is here</div>
+      {status === "ended" && chatIsOffensive && (
+        <div style={{ color: "red" }}>WARNING: We have detected you have broken one of our rules: <br /> - {llmVerdict} <br /> You will be muted if you continue to violate our policies</div>
       )}
     </>
   );

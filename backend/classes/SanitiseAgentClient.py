@@ -5,7 +5,7 @@ class SanitiseAgentClient:
         self.url = url
 
     def sanitise_message(self, sentence):
-        """ Same return shape as LayaLLM.is_message_offensive """
+        """ Same return shape as SanitiseAgentClient.start_program """
         try:
             res = requests.post(self.url, json={"sentence": sentence})
             res.raise_for_status()

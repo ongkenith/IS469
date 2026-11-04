@@ -93,6 +93,7 @@ class RephraseAgent:
                         
                         return {"result": "Error: LLM did not return anything"}
                     temp = re.sub(r"\[[^\]]+\]\:", "", WORKING_MEMORY[-1].strip())
+                    if '"' in temp[0]: temp = temp[1:len(temp)-1]
                     self.logs.append(f"> Return -- '{temp}'")
 
                     print("Program start_program has ended")

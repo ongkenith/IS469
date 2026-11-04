@@ -6,19 +6,28 @@ interface ChatMessage {
   id: string;
   sender: string;
   text: string;
+  pending: boolean; // true while waiting for the rephrased version
 }
 
-export async function sendChatHistoryToLLM(messages: ChatMessage[]): Promise<boolean> {
+export async function sendChatHistoryToLLM(messages: ChatMessage[]): Promise<string> {
   try {
-    const res = await fetch("http://127.0.0.1:5000/summarise_chat_history", {
+    const msg = messages
+      .filter((m) => !m.pending)
+      .map((m) => m.text.trim())
+      .filter((t) => t.length > 0);
+    
+    const res = await fetch("http://127.0.0.1:5000/gives_verdict", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ "sentences": messages }),
+      body: JSON.stringify({ "sentences": msg }),
     });
-    if (!res.ok) return false;
-    return true;
+    if (!res.ok) return "";
+
+    const data = await res.json()
+    console.log("Data Received [verdict]: ", data.message)
+    return data.message;
   } catch {
-    return false;
+    return "";
   }
 }
 
