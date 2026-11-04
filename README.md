@@ -28,6 +28,7 @@ npm install
 3. **Pull the following Ollama model(s)**
 ```bash
 ollama pull gemma3:4b
+ollama pull qwen3
 ```
 4. **Set up environment variables**<br>
     1. Make a copy of .env.example file under 'model_server' folder
@@ -83,6 +84,7 @@ To prevent infinite looping of the agent thinking and planning, step budgets are
 | Laya AI | convaiinnovations/laya | Determine if the message is offensive |
 | Groq | openai/gpt-oss-20b | LLM used to determine next course of action in an Agentic AI system |
 | Ollama (local) | gemma3:4b | LLM that rephrases to non-offensive message |
+| Ollama (local) | qwen3 | LLM that determines the policies violated by player |
 
 ## Architecture
 The following is a simple diagram of the application's architecture:<br><br>
