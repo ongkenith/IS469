@@ -64,6 +64,17 @@ The app will be available at `http://localhost:3000`.
 Refer to command line to see the printed logs of the application.
 
 ## Limitations of Applications
+**Limitation 1:** Reliance on Third-party Services<br>
+The orchestrator agent uses an open-weight model hosted by GROQ, a third party company. Therefore, it is subjected to the limits of API calling, as well as hosting support of the model used in this application
+>**Mitigation**: If support discontinues, the frontend will treat all non-error code 200 to be rephrased to '*Message is offensive*'
+
+**Limitation 2:** Quality of Rephrased Sentence<br>
+The quality of the rephrased sentence is dependent on whether the orchestrator believes it passes the criteria it was given. There are no human intervention to review before the final output.
+>**WARNING**: DO NOT FULLY RELY ON THIS APPLICATION'S CONCEPT IF SYSTEM IS CRITICAL
+
+**Limitation 3:** Step Budget Restrictions
+To prevent infinite looping of the agent thinking and planning, step budgets are defined, but could lead to incomplete paraphrasing.
+>**Mitigation**: Any instance that went out-of-budget will result in default rephrased sentence - '*Message is offensive*'
 
 ## LLM Models Used
 
@@ -74,3 +85,5 @@ Refer to command line to see the printed logs of the application.
 | Ollama (local) | gemma3:4b | LLM that rephrases to non-offensive message |
 
 ## Architecture
+The following is a simple diagram of the application's architecture:<br><br>
+![Architecture Diagram](archi.png)
