@@ -88,7 +88,7 @@ export default function GameChat({
   const [endedAt, setEndedAt] = useState<string | null>(null);
   const [disableSubmit, setDisableSubmit] = useState<boolean>(false)
   const [disableEndChatButton, setDisableEndChatButton] = useState<boolean>(false)
-  const [llmVerdict, setllmVerdictMsg] = useState<string>("")
+  const [llmVerdict, setllmVerdictMsg] = useState<string[]>([])
 
   const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -118,7 +118,8 @@ export default function GameChat({
       setDisableEndChatButton(true)
       const verdict = await onEnd(messages)
       if (verdict !== "") {
-        setllmVerdictMsg(verdict)
+        const verdict_and_future_pealties = verdict.split(";")
+        setllmVerdictMsg(verdict_and_future_pealties)
       }
     }
     setDisableEndChatButton(false)
@@ -252,7 +253,7 @@ export default function GameChat({
       </section>
 
       {status === "ended" && chatIsOffensive && (
-        <div style={{ color: "red" }}>WARNING: We have detected you have broken one of our rules: <br /> - {llmVerdict} <br /> You will be muted if you continue to violate our policies</div>
+        <div style={{ color: "red" }}><div style={{fontSize: "20px"}}>WARNING</div>We have detected you have broken one of our rules: <b>{llmVerdict[0]}</b> <br /> You will be <b>{llmVerdict[1]}</b> if you continue to violate our policies</div>
       )}
     </>
   );

@@ -4,6 +4,14 @@ class VerdictLLM:
     def __init__(self):
         self.main_model_name = "qwen3"
 
+        self.offenses_to_future_penalties = {
+            "Extremism": "muted for 1 hour",
+            "Threats": "muted for 30 minutes",
+            "Hate and Harassment": "muted for 30 minutes",
+            "Insults and Flaming": "muted for 10 minutes",
+            "Other Offensive Texts": "muted for 10 minutes"
+        }
+
     def get_verdict(self, content):
         """ Sends all the chat messages history, provide a verdict based on criteria """
 
@@ -28,10 +36,10 @@ class VerdictLLM:
         # Output safety check
         if res.strip() == "Others":
             print("Program get_verdict has ended")
-            return {"verdict": "Other offenses beyond stated ones in our policy"}
-        elif res.strip() not in ["Hate Speech", "Threats & Violence", "Sexual Content", "Harassment & Toxicity", "Scam & RMT", "Cheating Promotion", "Spam & Advertising", "Personal Information", "Impersonation"]:
+            return {"verdict": "Other offenses beyond stated ones in our policy;muted for 10 minutes"}
+        elif res.strip() not in self.offenses_to_future_penalties:
             print("Program get_verdict has ended")
-            return {"verdict": "Other offenses beyond stated ones in our policy"}
+            return {"verdict": "Other offenses beyond stated ones in our policy;muted for 10 minutes"}
 
         print("Program get_verdict has ended")
-        return {"verdict": res}
+        return {"verdict": f"{res};{self.offenses_to_future_penalties[res]}"}
