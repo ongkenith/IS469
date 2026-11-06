@@ -32,6 +32,7 @@ ollama pull qwen3
     3. Adjust THINKING_EFFORT you want the Agent to have (Low, Medium or High)
 
 5. **OPTIONAL: Add finetuned Laya model**<br>
+'laya_model_training_notebook.ipynb' notebook inside 'training materials' folder has been coded to be used in Google Colab. Together with the processed dataset, run the required cells to **train**, **evaluate** and extract the model's weights to a folder.<br>
 Rename the folder to "laya_finetuned" and add it in the "model_server" directory. Inside the folder, it should contain
     - Encoder folder with 'config.json'
     - Tokeniser folder with 'tokenizer_config.json' and 'tokenizer.json' files
@@ -69,20 +70,20 @@ The app will be available at `http://localhost:3000`.
 Refer to command line to see the printed logs of the application.
 
 ## Demo
-**Home Page - Chat Interface to Simulate the project**
-![Img of Home Page](README_assets/homepage.png)
+**Home Page - Chat Interface to Simulate the project**<br>
+<img src='README_assets/homepage.png' width='50%' alt='Img of Home Page' />
 - Press on "Start Chat" to begin typing a message
 - Press "Send" to send the message. The message will take a while to display as it is going through the AI to check if it is offensive<br>
 
-**Status of the Message**
-![Message Status](README_assets/message_status.png)
+**Status of the Message**<br>
+<img src='README_assets/message_status.png' width='50%' alt='Message Status' />
 - If message has been checked and is not offensive, it will be displayed as normal
 - If message has been checked and is offensive, it will display the rephrased version. Asterisk at the start and end of the message will also indiciate the sentence has been rephrased. *Default* rephrasing is "Message is offensive" if Agent runs out of step budget.
 - If message is under scrutinisation by the AI, it will display '[Your message is being rewritten...]' as a placeholder
 
 **Warning Message for Offensive Chat Session**<br>
 If during the chat session has been flagged as offensive, a warning message (in red) will be displayed below the chat.<br>
-![Offensive Warning](README_assets/warning_message.png)
+<img src='README_assets/warning_message.png' width='50%' alt='Offensive Warning' />
 
 
 ## Limitations of Applications
