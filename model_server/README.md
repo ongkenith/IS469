@@ -1,9 +1,9 @@
-# INFORMATION OF APPLICATION BACKEND
-This is a Flask application to run the model
+# INFORMATION OF APPLICATION MODEL SERVER
+This is a Flask application to load and run the model
 
 ## Getting Started
 
-Ensure that you have followed the instructions to download the Python dependencies (refer to README in root folder).
+Ensure that you have followed the instructions to download the Python dependencies and pulled the necessary ollama models (refer to README in root folder).
 
 To run the Flask server:
 
