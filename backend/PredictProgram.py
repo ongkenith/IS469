@@ -2,7 +2,7 @@ from classes.LayaClient import LayaClient
 
 def predict_program(input_sentence):
     """ Start program and predicts sentiment of sentence """
-    THRESHOLD_FOR_NON_OFFENSIVE = 0.80  # Set confidence percentage where result is non-offensive requires further checks
+    THRESHOLD_FOR_NON_OFFENSIVE = 0.95  # Set confidence percentage where result is non-offensive requires further checks
 
     laya_client = LayaClient()  # Call Client
     result = laya_client.is_message_offensive(input_sentence)  # Get the prediction
