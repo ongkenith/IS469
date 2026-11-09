@@ -1,10 +1,12 @@
 import laya  
+import time
 
 class LayaLLM:
     def __init__(self):     
         self.model_dir = "./laya_finetuned"
         try:
             self.agent = laya.load(self.model_dir)
+            print("[System] Using Laya Finetuned Model")
         except:
             print("[LayaLLM Class Error]: Finetuned model cannot be loaded in. Reverting to basic model...")
             self.agent = laya.load("convaiinnovations/laya")
@@ -32,17 +34,19 @@ class LayaLLM:
 
         try: 
             print("Program is_message_offensive has started")
+            start_time = time.perf_counter()
             res = self.agent.predict({"message": sentence}, self.questions)
             ans = res["answers"]["label"]
 
-            print("Program is_message_offensive has ended")
+            end_time = time.perf_counter()
+            print(f"Program is_message_offensive has ended. Time taken: {end_time-start_time}s")
             return {
                 "result": str(ans["choice"]),
                 "confidence": float(ans.get("answer_confidence"))
             }
 
         except Exception as e:
-            print("Program is_message_offensive has started")
+            print("Program is_message_offensive has ended")
             return {
                 "result": f"Error: {e}",
                 "confidence": 0

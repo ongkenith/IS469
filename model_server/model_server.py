@@ -1,10 +1,21 @@
 from flask import Flask, request, jsonify
 from llm_modules.LayaLLM import LayaLLM
+from llm_modules.ElectraLLM import ElectraLLM
 from llm_modules.RephraseAgent import RephraseAgent
 from llm_modules.VerdictLLM import VerdictLLM
+import os
 
 app = Flask(__name__)
-_MODEL = LayaLLM()  # Loaded once, only when you start this server
+# Dependent on which finetuned model is given
+try:
+    if os.path.isdir("./electra_finetuned"):
+        print("[System] Using Electra Finetuned Model")
+        _MODEL = ElectraLLM()
+    else:
+        _MODEL = LayaLLM()
+except:
+    _MODEL = LayaLLM()
+
 _REPHRASEAGENT = RephraseAgent()
 _VERDICT = VerdictLLM()
 

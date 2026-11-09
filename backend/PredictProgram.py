@@ -1,16 +1,17 @@
 from classes.LayaClient import LayaClient
 import os
+from dotenv import load_dotenv
+
+# Load .env variables
+load_dotenv()
 
 def predict_program(input_sentence):
     """ Start program and predicts sentiment of sentence """
     try:
-        CHECK_FOLDER = "../model_server/laya_finetuned"
-        if os.path.isdir(CHECK_FOLDER):
-            THRESHOLD_FOR_NON_OFFENSIVE = 0.95
-        else:
-            THRESHOLD_FOR_NON_OFFENSIVE = 0.8
+        THRESHOLD_FOR_NON_OFFENSIVE = float(os.getenv("HRESHOLD_FOR_NON_OFFENSIVE"))
     except:
         THRESHOLD_FOR_NON_OFFENSIVE = 0.8  # Set confidence percentage where result is non-offensive requires further checks
+    print(f"[System] THRESHOLD USING: {THRESHOLD_FOR_NON_OFFENSIVE}")
 
     laya_client = LayaClient()  # Call Client
     result = laya_client.is_message_offensive(input_sentence)  # Get the prediction

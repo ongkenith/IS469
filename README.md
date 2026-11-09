@@ -1,8 +1,13 @@
 # IS469 Project: Offensive Message Detection & Rephrasing
-Using Large Language Models (LLMs) to detect offensive messages and suggest respectful rephrasings that preserve the sender's original intent.
+Using Artifical Intelligence (AI) (Large Language Models (LLMs), System One Decision Model / Encoder Model etc.) to detect offensive messages and suggest respectful rephrasings that preserve the sender's original intent.
 
 ### Overview ###
-This project explores how non-autoregressive System 1 decision model can be used to flag offensive or toxic messages, and use LLMs to automatically rewrite them in a more constructive tone while maintaining the message, instead of relying on pattern matching like Regex and mask messages with asterisk. <br>
+This project explores with **NO** dataset to train on, how a non-autoregressive System One decision model can be used to flag offensive or toxic messages.
+> Options are available to use a fine-tuned System One decision model or an older encoder model to do the classification
+
+This project also extends to the following:
+- using Agentic AI to automatically rewrite them in a more constructive tone while maintaining the message, instead of relying on ban word list OR pattern matching like Regex, to mask messages with asterisk.
+- using LLM to identify the policy violated by the player
 
 ## Pre-requisites
 Ensure that the following are installed on your device before running the Backend, Frontend and Model_Server's services:
@@ -30,17 +35,22 @@ ollama pull qwen3
     1. Make a copy of .env.example file under 'model_server' folder
     2. Add your GROQ API key
     3. Adjust THINKING_EFFORT you want the Agent to have (Low, Medium or High)
+    4. Adjust THRESHOLD_FOR_NON_OFFENSIVE to determine how low of a confidence score will require non-offensive classification to be redirected to an LLM
 
-5. **OPTIONAL: Add finetuned Laya model**<br>
-'laya_model_training_notebook.ipynb' notebook inside 'training materials' folder has been coded to be used in Google Colab. Together with the processed dataset, run the required cells to **train**, **evaluate** and extract the model's weights to a folder.<br>
-Rename the folder to "laya_finetuned" and add it in the "model_server" directory. Inside the folder, it should contain
-    - Encoder folder with 'config.json'
-    - Tokeniser folder with 'tokenizer_config.json' and 'tokenizer.json' files
-    - 'model.safetensors' file
-    - 'rl_agent_config.json' file
-Otherwise, the default Laya model will be used
+### OPTIONAL: Add a finetuned model
 
-### Running the Application
+Inside 'training materials' folder, there are a few notebooks to train either: 
+- 'laya_model_training_notebook.ipynb' to train Laya model 
+- 'electra_model_training_notebook.ipynb' to train ELECTRA model
+
+Together with the processed dataset, run the required cells to **train**, **evaluate** and extract the model's weights to a folder.<br>
+Rename the folder to either "laya_finetuned" OR "electra_finetuned" and add it in the "model_server" directory.
+
+Otherwise, the default Laya base model will be used (convaiinnovations/laya)
+
+<b>ANY OTHER MODEL MAY REQUIRE CODE CHANGES!</b>
+
+## Running the Application
 **Step 1**<br>
 Open up Ollama desktop application and ensure it is running in the background
 
@@ -103,7 +113,7 @@ To prevent infinite looping of the agent thinking and planning, step budgets are
 If a chat session contains more than 1 kind of offense, the AI is tasked to provide the more serious offense as the output.
 >**If necessary**: Modify the prompt and code if require to list down all the offenses instead
 
-## LLM Models Used
+## LLM Models Used (Default Settings)
 
 | Provider | Model(s) | Purpose |
 |----------|----------|---------|
